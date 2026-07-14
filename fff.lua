@@ -1,12 +1,11 @@
-
 -- Создаем GUI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Создаем Frame (основное меню)
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 250, 0, 450)
-Frame.Position = UDim2.new(0, 20, 0.5, -225)
+Frame.Size = UDim2.new(0, 250, 0, 480)
+Frame.Position = UDim2.new(0, 20, 0.5, -240)
 Frame.BackgroundColor3 = Color3.new(0.15, 0.15, 0.15)
 Frame.BackgroundTransparency = 0.2
 Frame.Active = true
@@ -26,7 +25,7 @@ TitleLabel.Parent = Frame
 
 -- Создаем ScrollingFrame для списка игроков
 local PlayerList = Instance.new("ScrollingFrame")
-PlayerList.Size = UDim2.new(1, -10, 1, -130)
+PlayerList.Size = UDim2.new(1, -10, 1, -160)
 PlayerList.Position = UDim2.new(0, 5, 0, 35)
 PlayerList.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 PlayerList.BackgroundTransparency = 0.5
@@ -37,8 +36,8 @@ PlayerList.Parent = Frame
 
 -- Создаем кнопки управления
 local ButtonFrame = Instance.new("Frame")
-ButtonFrame.Size = UDim2.new(1, 0, 0, 90)
-ButtonFrame.Position = UDim2.new(0, 0, 1, -90)
+ButtonFrame.Size = UDim2.new(1, 0, 0, 120)
+ButtonFrame.Position = UDim2.new(0, 0, 1, -120)
 ButtonFrame.BackgroundTransparency = 1
 ButtonFrame.Parent = Frame
 
@@ -46,7 +45,7 @@ ButtonFrame.Parent = Frame
 local RunButton = Instance.new("TextButton")
 RunButton.Size = UDim2.new(1, -10, 0, 35)
 RunButton.Position = UDim2.new(0, 5, 0, 0)
-RunButton.Text = "🏃 Бежать к игроку"
+RunButton.Text = "🎯 Бежать к игроку"
 RunButton.BackgroundColor3 = Color3.new(0, 0.5, 1)
 RunButton.TextColor3 = Color3.new(1, 1, 1)
 RunButton.Font = Enum.Font.SourceSansBold
@@ -64,16 +63,29 @@ StopButton.Font = Enum.Font.SourceSansBold
 StopButton.TextSize = 14
 StopButton.Parent = ButtonFrame
 
+-- Информационная метка
+local InfoLabel = Instance.new("TextLabel")
+InfoLabel.Size = UDim2.new(1, -10, 0, 30)
+InfoLabel.Position = UDim2.new(0, 5, 0, 80)
+InfoLabel.Text = "Статус: Ожидание..."
+InfoLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+InfoLabel.BackgroundTransparency = 0.3
+InfoLabel.TextColor3 = Color3.new(1, 1, 1)
+InfoLabel.Font = Enum.Font.SourceSans
+InfoLabel.TextSize = 12
+InfoLabel.Parent = ButtonFrame
+
 -- Переменные
 local runConnection = nil
-local attackConnection = nil
+local aimConnection = nil
 local isRunning = false
-local isAttacking = false
+local isAiming = false
 local selectedPlayer = nil
 local playerButtons = {}
+local currentTarget = nil
 
--- Функция для нанесения удара
-local function attackPlayer(targetPlayer)
+-- Функция для прицеливания (наведение курсора на игрока)
+local function aimAtPlayer(targetPlayer)
     if not targetPlayer or not targetPlayer.Character then
         return false
     end
@@ -89,89 +101,73 @@ local function attackPlayer(targetPlayer)
         return false
     end
     
-    -- Проверяем расстояние до цели
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
     local targetRoot = targetCharacter:FindFirstChild("HumanoidRootPart")
-    
-    if not rootPart or not targetRoot then
+    if not targetRoot then
         return false
     end
     
-    local distance = (rootPart.Position - targetRoot.Position).Magnitude
-    
-    -- Если цель в радиусе 5 студий, бьем
-    if distance <= 5 then
-        -- Ищем способность удара (может быть Tool в руке или в инвентаре)
-        local attackTool = nil
-        
-        -- Проверяем, есть ли оружие в руках
-        for _, tool in pairs(character:GetChildren()) do
-            if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
-                attackTool = tool
-                break
-            end
-        end
-        
-        -- Если оружия нет, ищем в инвентаре
-        if not attackTool then
-            for _, tool in pairs(localPlayer.Backpack:GetChildren()) do
-                if tool:IsA("Tool") then
-                    attackTool = tool
-                    break
-                end
-            end
-        end
-        
-        if attackTool then
-            -- Активируем оружие
-            local humanoid = character:FindFirstChild("Humanoid")
-            if humanoid then
-                humanoid:EquipTool(attackTool)
-            end
-            
-            -- Симулируем удар (активируем Tool)
-            attackTool:Activate()
-            
-            -- Для некоторых игр может потребоваться удаленный вызов
-            local remoteEvent = attackTool:FindFirstChild("RemoteEvent")
-            if remoteEvent and remoteEvent:IsA("RemoteEvent") then
-                remoteEvent:FireServer()
-            end
-            
-            -- Проверяем, есть ли у инструмента событие для удара
-            local attackFunction = attackTool:FindFirstChild("Attack")
-            if attackFunction and attackFunction:IsA("RemoteEvent") then
-                attackFunction:FireServer()
-            end
-            
-            return true
-        else
-            -- Если оружия нет, пытаемся найти способность в Character
-            local humanoid = character:FindFirstChild("Humanoid")
-            if humanoid then
-                -- Для некоторых игр удар может быть в Humanoid
-                local attackRemote = character:FindFirstChild("AttackRemote")
-                if attackRemote and attackRemote:IsA("RemoteEvent") then
-                    attackRemote:FireServer()
-                    return true
-                end
-            end
-        end
+    -- Находим камеру
+    local camera = workspace.CurrentCamera
+    if not camera then
+        return false
     end
     
-    return false
+    -- Получаем позицию цели в мировых координатах
+    local targetPosition = targetRoot.Position
+    
+    -- Вариант 1: Наведение камеры через CFrame (для игр от 3-го лица)
+    local characterRoot = character:FindFirstChild("HumanoidRootPart")
+    if characterRoot then
+        -- Вычисляем направление к цели
+        local direction = (targetPosition - characterRoot.Position).Unit
+        -- Поворачиваем камеру в сторону цели
+        camera.CFrame = CFrame.new(camera.CFrame.Position, targetPosition)
+    end
+    
+    -- Вариант 2: Для игр от 1-го лица - перемещаем мышь
+    -- Это работает через UserInputService (эмуляция движения мыши)
+    local userInputService = game:GetService("UserInputService")
+    
+    -- Получаем позицию цели на экране
+    local screenPoint, onScreen = camera:WorldToScreenPoint(targetPosition)
+    
+    if onScreen then
+        -- Пытаемся переместить курсор в центр цели
+        -- (для некоторых игр это может не работать из-за ограничений Roblox)
+        userInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+        userInputService.MouseIconEnabled = false
+        
+        -- Плавно перемещаем камеру
+        local tweenService = game:GetService("TweenService")
+        local newCFrame = CFrame.new(camera.CFrame.Position, targetPosition)
+        
+        -- Создаем анимацию поворота камеры
+        local tweenInfo = TweenInfo.new(
+            0.1, -- Длительность
+            Enum.EasingStyle.Linear,
+            Enum.EasingDirection.Out
+        )
+        
+        -- Пытаемся применить анимацию к камере
+        local tween = tweenService:Create(camera, tweenInfo, {CFrame = newCFrame})
+        tween:Play()
+    end
+    
+    return true
 end
 
--- Функция для постоянного нанесения ударов
-local function startAttacking(targetPlayer)
-    if attackConnection then
-        attackConnection:Disconnect()
-        attackConnection = nil
+-- Функция для постоянного прицеливания
+local function startAiming(targetPlayer)
+    if aimConnection then
+        aimConnection:Disconnect()
+        aimConnection = nil
     end
     
-    isAttacking = true
+    isAiming = true
+    currentTarget = targetPlayer
+    InfoLabel.Text = "Статус: 🎯 Прицеливание на " .. targetPlayer.Name
     
-    attackConnection = game:GetService("RunService").Heartbeat:Connect(function()
+    aimConnection = game:GetService("RunService").Heartbeat:Connect(function()
         if not targetPlayer or not targetPlayer.Character then
             stopEverything()
             return
@@ -190,47 +186,113 @@ local function startAttacking(targetPlayer)
             return
         end
         
-        local rootPart = character:FindFirstChild("HumanoidRootPart")
         local targetRoot = targetCharacter:FindFirstChild("HumanoidRootPart")
-        
-        if not rootPart or not targetRoot then
+        if not targetRoot then
             stopEverything()
             return
         end
         
-        local distance = (rootPart.Position - targetRoot.Position).Magnitude
+        -- Наводимся на цель
+        aimAtPlayer(targetPlayer)
         
-        -- Если цель в радиусе атаки
-        if distance <= 5 then
-            -- Меняем цвет кнопки на оранжевый (режим атаки)
-            RunButton.BackgroundColor3 = Color3.new(1, 0.5, 0)
-            RunButton.Text = "⚔️ Атакую " .. targetPlayer.Name
-            
-            -- Наносим удар
-            attackPlayer(targetPlayer)
-        else
-            -- Если цель далеко, показываем что бежим
-            if isRunning then
-                RunButton.BackgroundColor3 = Color3.new(0, 1, 0)
-                RunButton.Text = "🏃 Бегу к " .. targetPlayer.Name .. "..."
-            end
+        -- Проверяем, жива ли цель
+        local targetHumanoid = targetCharacter:FindFirstChild("Humanoid")
+        if targetHumanoid and targetHumanoid.Health <= 0 then
+            stopEverything()
+            InfoLabel.Text = "Статус: ❌ Цель мертва"
         end
     end)
 end
 
--- Остановка всего (и бега, и атаки)
+-- Функция для нанесения удара (простая версия)
+local function attackPlayer(targetPlayer)
+    if not targetPlayer or not targetPlayer.Character then
+        return false
+    end
+    
+    local localPlayer = game.Players.LocalPlayer
+    local character = localPlayer.Character
+    if not character then
+        return false
+    end
+    
+    local targetCharacter = targetPlayer.Character
+    if not targetCharacter then
+        return false
+    end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    local targetRoot = targetCharacter:FindFirstChild("HumanoidRootPart")
+    
+    if not rootPart or not targetRoot then
+        return false
+    end
+    
+    local distance = (rootPart.Position - targetRoot.Position).Magnitude
+    
+    if distance <= 6 then
+        -- Пытаемся найти оружие
+        local attackTool = nil
+        
+        for _, tool in pairs(character:GetChildren()) do
+            if tool:IsA("Tool") then
+                attackTool = tool
+                break
+            end
+        end
+        
+        if not attackTool then
+            for _, tool in pairs(localPlayer.Backpack:GetChildren()) do
+                if tool:IsA("Tool") then
+                    attackTool = tool
+                    break
+                end
+            end
+        end
+        
+        if attackTool then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid:EquipTool(attackTool)
+            end
+            attackTool:Activate()
+            
+            -- Пытаемся вызвать удаленные события
+            for _, child in pairs(attackTool:GetDescendants()) do
+                if child:IsA("RemoteEvent") or child:IsA("RemoteFunction") then
+                    if child.Name:lower():find("attack") or child.Name:lower():find("hit") or child.Name:lower():find("damage") then
+                        pcall(function()
+                            if child:IsA("RemoteEvent") then
+                                child:FireServer()
+                            elseif child:IsA("RemoteFunction") then
+                                child:InvokeServer()
+                            end
+                        end)
+                    end
+                end
+            end
+            
+            return true
+        end
+    end
+    
+    return false
+end
+
+-- Остановка всего
 local function stopEverything()
     if runConnection then
         runConnection:Disconnect()
         runConnection = nil
     end
     
-    if attackConnection then
-        attackConnection:Disconnect()
-        attackConnection = nil
+    if aimConnection then
+        aimConnection:Disconnect()
+        aimConnection = nil
     end
     
-    local character = game.Players.LocalPlayer.Character
+    local localPlayer = game.Players.LocalPlayer
+    local character = localPlayer.Character
     if character then
         local humanoid = character:FindFirstChild("Humanoid")
         if humanoid then
@@ -242,22 +304,26 @@ local function stopEverything()
         end
     end
     
+    -- Возвращаем нормальное поведение мыши
+    local userInputService = game:GetService("UserInputService")
+    userInputService.MouseBehavior = Enum.MouseBehavior.Default
+    userInputService.MouseIconEnabled = true
+    
     isRunning = false
-    isAttacking = false
+    isAiming = false
+    currentTarget = nil
+    
     RunButton.BackgroundColor3 = Color3.new(0, 0.5, 1)
     if selectedPlayer then
-        RunButton.Text = "🏃 Бежать к " .. selectedPlayer.Name
+        RunButton.Text = "🎯 Бежать к " .. selectedPlayer.Name
+        InfoLabel.Text = "Статус: Ожидание... (выбран " .. selectedPlayer.Name .. ")"
     else
-        RunButton.Text = "🏃 Бежать к игроку"
+        RunButton.Text = "🎯 Бежать к игроку"
+        InfoLabel.Text = "Статус: Выберите игрока"
     end
 end
 
--- Функция остановки бега (вызывается из stopEverything)
-local function stopRunning()
-    stopEverything()
-end
-
--- Функция начала бега и атаки
+-- Функция начала бега и прицеливания
 local function startRunningToPlayer(targetPlayer)
     stopEverything()
     
@@ -292,6 +358,7 @@ local function startRunningToPlayer(targetPlayer)
     end
     
     humanoid.WalkSpeed = 50
+    InfoLabel.Text = "Статус: 🏃 Бегу к " .. targetPlayer.Name
     
     -- Запускаем движение
     runConnection = game:GetService("RunService").Heartbeat:Connect(function()
@@ -324,19 +391,25 @@ local function startRunningToPlayer(targetPlayer)
             return
         end
         
-        -- Проверяем расстояние до цели
         local distance = (localRoot.Position - targetPos.Position).Magnitude
         
-        if distance <= 5 then
-            -- Достигли цели, начинаем атаковать
-            if not isAttacking then
-                startAttacking(targetPlayer)
+        if distance <= 6 then
+            -- Достигли цели - начинаем прицеливание и атаку
+            if not isAiming then
+                startAiming(targetPlayer)
+                InfoLabel.Text = "Статус: 🎯 Прицеливаюсь на " .. targetPlayer.Name
+                RunButton.BackgroundColor3 = Color3.new(1, 0.5, 0)
+                RunButton.Text = "🎯 Прицеливание на " .. targetPlayer.Name
             end
+            
+            -- Атакуем
+            attackPlayer(targetPlayer)
         else
-            -- Продолжаем бежать к цели
+            -- Продолжаем бежать
             humanoid:MoveTo(targetPos.Position)
             RunButton.BackgroundColor3 = Color3.new(0, 1, 0)
             RunButton.Text = "🏃 Бегу к " .. targetPlayer.Name .. "..."
+            InfoLabel.Text = "Статус: 🏃 Бегу к " .. targetPlayer.Name .. " (" .. math.floor(distance) .. " ст.)"
         end
     end)
     
@@ -345,7 +418,6 @@ end
 
 -- Функция обновления списка игроков
 local function updatePlayerList()
-    -- Очищаем старые кнопки
     for _, button in ipairs(playerButtons) do
         button:Destroy()
     end
@@ -357,7 +429,6 @@ local function updatePlayerList()
     PlayerList.CanvasSize = UDim2.new(0, 0, 0, canvasHeight)
     
     for i, player in ipairs(players) do
-        -- Создаем кнопку для каждого игрока
         local playerButton = Instance.new("TextButton")
         playerButton.Size = UDim2.new(1, -10, 0, 30)
         playerButton.Position = UDim2.new(0, 5, 0, (i - 1) * 35 + 5)
@@ -368,23 +439,20 @@ local function updatePlayerList()
         playerButton.TextSize = 14
         playerButton.Parent = PlayerList
         
-        -- Выделяем выбранного игрока
         if player == selectedPlayer then
             playerButton.BackgroundColor3 = Color3.new(0, 0.5, 0)
         end
         
-        -- Обработчик выбора игрока
         playerButton.MouseButton1Click:Connect(function()
             selectedPlayer = player
             
-            -- Обновляем выделение
             for _, btn in ipairs(playerButtons) do
                 btn.BackgroundColor3 = Color3.new(0.25, 0.25, 0.25)
             end
             playerButton.BackgroundColor3 = Color3.new(0, 0.5, 0)
             
-            -- Показываем сообщение
-            RunButton.Text = "🏃 Бежать к " .. player.Name
+            RunButton.Text = "🎯 Бежать к " .. player.Name
+            InfoLabel.Text = "Статус: Выбран " .. player.Name
         end)
         
         table.insert(playerButtons, playerButton)
@@ -393,13 +461,14 @@ end
 
 -- Обработчики кнопок
 RunButton.MouseButton1Click:Connect(function()
-    if isRunning or isAttacking then
+    if isRunning or isAiming then
         stopEverything()
         return
     end
     
     if not selectedPlayer then
         warn("Выберите игрока из списка")
+        InfoLabel.Text = "Статус: ⚠️ Выберите игрока!"
         return
     end
     
@@ -408,16 +477,15 @@ end)
 
 StopButton.MouseButton1Click:Connect(function()
     stopEverything()
+    InfoLabel.Text = "Статус: ⏹️ Остановлено"
 end)
 
--- Обновляем список при подключении/отключении игроков
+-- Обновление списка
 game.Players.PlayerAdded:Connect(updatePlayerList)
 game.Players.PlayerRemoving:Connect(updatePlayerList)
-
--- Первоначальное обновление
 updatePlayerList()
 
--- Обновляем список каждые 5 секунд
+-- Обновление каждые 5 секунд
 spawn(function()
     while true do
         wait(5)
@@ -431,3 +499,6 @@ ScreenGui.AncestryChanged:Connect(function()
         stopEverything()
     end
 end)
+
+-- Сообщение об активации
+InfoLabel.Text = "Статус: ✅ Скрипт активирован. Выберите игрока!"
