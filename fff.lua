@@ -83,43 +83,33 @@ local isClicking = false
 local selectedPlayer = nil
 local playerButtons = {}
 
--- Функция для эмуляции нажатия левой кнопки мыши
+-- ФУНКЦИЯ КЛИКА (исправленная)
 local function clickMouse()
-    local userInputService = game:GetService("UserInputService")
-    
-    -- Получаем позицию мыши
-    local mouse = game.Players.LocalPlayer:GetMouse()
-    
-    -- Эмуляция нажатия ЛКМ
-    -- Способ 1: Через UserInputService (более надежный)
-    pcall(function()
-        -- Имитируем нажатие кнопки
-        local inputObject = {
-            UserInputType = Enum.UserInputType.MouseButton1,
-            Position = mouse.X and Vector2.new(mouse.X, mouse.Y) or Vector2.new(0, 0),
-            Delta = Vector2.new(0, 0),
-            KeyCode = Enum.KeyCode.Unknown
-        }
-        userInputService:InputBegan(inputObject, false)
-        wait(0.05)
-        userInputService:InputEnded(inputObject, false)
-    end)
-    
-    -- Способ 2: Через Mouse (старый способ, но работает во многих играх)
-    pcall(function()
-        if mouse and mouse.Button1Down then
-            mouse.Button1Down:Fire()
-            wait(0.05)
-            mouse.Button1Up:Fire()
-        end
-    end)
-    
-    -- Способ 3: Через виртуальные события (для некоторых игр)
+    -- Способ 1: VirtualInputManager (самый надежный)
     pcall(function()
         local virtualInput = game:GetService("VirtualInputManager")
+        -- Нажимаем ЛКМ
         virtualInput:SendMouseButtonEvent(0, 0, 0, true, game, 0)
         wait(0.05)
+        -- Отпускаем ЛКМ
         virtualInput:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+    end)
+    
+    -- Способ 2: Через Mouse (запасной)
+    pcall(function()
+        local mouse = game.Players.LocalPlayer:GetMouse()
+        if mouse then
+            -- Эмулируем нажатие через события
+            local args = {
+                [1] = Enum.UserInputState.Begin,
+                [2] = Enum.UserInputType.MouseButton1,
+                [3] = Vector2.new(mouse.X or 0, mouse.Y or 0)
+            }
+            game:GetService("UserInputService").InputBegan:Fire(args)
+            wait(0.05)
+            args[1] = Enum.UserInputState.End
+            game:GetService("UserInputService").InputEnded:Fire(args)
+        end
     end)
 end
 
@@ -135,7 +125,7 @@ local function startClicking(targetPlayer)
     RunButton.BackgroundColor3 = Color3.new(1, 0.3, 0)
     RunButton.Text = "⚔️ Атакую " .. targetPlayer.Name
     
-    -- Кликаем каждые 0.2 секунды
+    -- Кликаем КАЖДЫЙ КАДР (очень быстро)
     clickConnection = game:GetService("RunService").Heartbeat:Connect(function()
         if not targetPlayer or not targetPlayer.Character then
             stopEverything()
@@ -155,14 +145,13 @@ local function startClicking(targetPlayer)
             return
         end
         
-        -- Проверяем расстояние до цели
         local rootPart = character:FindFirstChild("HumanoidRootPart")
         local targetRoot = targetCharacter:FindFirstChild("HumanoidRootPart")
         
         if rootPart and targetRoot then
             local distance = (rootPart.Position - targetRoot.Position).Magnitude
             
-            if distance <= 7 then
+            if distance <= 8 then
                 -- Делаем клик
                 clickMouse()
                 StatusLabel.Text = "Статус: ⚔️ Атакую " .. targetPlayer.Name .. " (дист. " .. math.floor(distance) .. ")"
@@ -248,7 +237,6 @@ local function startRunningToPlayer(targetPlayer)
     humanoid.WalkSpeed = 50
     StatusLabel.Text = "Статус: 🏃 Бегу к " .. targetPlayer.Name
     
-    -- Запускаем движение
     runConnection = game:GetService("RunService").Heartbeat:Connect(function()
         if not targetPlayer or not targetPlayer.Character then
             stopEverything()
@@ -281,13 +269,11 @@ local function startRunningToPlayer(targetPlayer)
         
         local distance = (localRoot.Position - targetPos.Position).Magnitude
         
-        if distance <= 7 then
-            -- Достигли цели - начинаем кликать
+        if distance <= 8 then
             if not isClicking then
                 startClicking(targetPlayer)
             end
         else
-            -- Бежим к цели
             humanoid:MoveTo(targetPos.Position)
             RunButton.BackgroundColor3 = Color3.new(0, 1, 0)
             RunButton.Text = "🏃 Бегу к " .. targetPlayer.Name .. "..."
@@ -366,7 +352,6 @@ game.Players.PlayerAdded:Connect(updatePlayerList)
 game.Players.PlayerRemoving:Connect(updatePlayerList)
 updatePlayerList()
 
--- Обновление каждые 5 секунд
 spawn(function()
     while true do
         wait(5)
@@ -374,7 +359,6 @@ spawn(function()
     end
 end)
 
--- Сброс при уничтожении GUI
 ScreenGui.AncestryChanged:Connect(function()
     if not ScreenGui.Parent then
         stopEverything()
