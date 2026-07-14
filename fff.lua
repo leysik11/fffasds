@@ -1,19 +1,30 @@
--- Создаем GUI (привязываем к PlayerGui, а не к персонажу)
+-- ============================================
+-- FLY HUNTER - MAIN SCRIPT
+-- ============================================
+
 local player = game.Players.LocalPlayer
 local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "FlyGUI"
+ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Создаем Frame
+-- ============================================
+-- CREATE MAIN FRAME
+-- ============================================
+
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 280, 0, 520)
-Frame.Position = UDim2.new(0, 20, 0.5, -260)
+Frame.Size = UDim2.new(0, 320, 0, 600)
+Frame.Position = UDim2.new(0, 20, 0.5, -300)
 Frame.BackgroundColor3 = Color3.new(0.15, 0.15, 0.15)
 Frame.BackgroundTransparency = 0.2
 Frame.Active = true
 Frame.Draggable = true
 Frame.Parent = ScreenGui
 
--- КНОПКА ЗАКРЫТИЯ
+-- ============================================
+-- CLOSE BUTTON
+-- ============================================
+
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 30, 0, 30)
 CloseButton.Position = UDim2.new(1, -35, 0, 2)
@@ -25,7 +36,10 @@ CloseButton.Font = Enum.Font.SourceSansBold
 CloseButton.TextSize = 18
 CloseButton.Parent = Frame
 
--- Заголовок
+-- ============================================
+-- TITLE
+-- ============================================
+
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -40, 0, 30)
 TitleLabel.Position = UDim2.new(0, 5, 0, 0)
@@ -36,9 +50,12 @@ TitleLabel.Font = Enum.Font.SourceSansBold
 TitleLabel.TextSize = 16
 TitleLabel.Parent = Frame
 
--- Список игроков
+-- ============================================
+-- PLAYER LIST
+-- ============================================
+
 local PlayerList = Instance.new("ScrollingFrame")
-PlayerList.Size = UDim2.new(1, -10, 1, -200)
+PlayerList.Size = UDim2.new(1, -10, 1, -240)
 PlayerList.Position = UDim2.new(0, 5, 0, 35)
 PlayerList.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 PlayerList.BackgroundTransparency = 0.5
@@ -47,84 +64,98 @@ PlayerList.ScrollBarImageColor3 = Color3.new(0.5, 0.5, 0.5)
 PlayerList.CanvasSize = UDim2.new(0, 0, 0, 0)
 PlayerList.Parent = Frame
 
--- Панель кнопок
+-- ============================================
+-- BUTTON PANEL
+-- ============================================
+
 local ButtonFrame = Instance.new("Frame")
-ButtonFrame.Size = UDim2.new(1, 0, 0, 200)
-ButtonFrame.Position = UDim2.new(0, 0, 1, -200)
+ButtonFrame.Size = UDim2.new(1, 0, 0, 240)
+ButtonFrame.Position = UDim2.new(0, 0, 1, -240)
 ButtonFrame.BackgroundTransparency = 1
 ButtonFrame.Parent = Frame
 
--- Кнопка "Лететь + Атака"
-local MainButton = Instance.new("TextButton")
-MainButton.Size = UDim2.new(1, -10, 0, 40)
-MainButton.Position = UDim2.new(0, 5, 0, 0)
-MainButton.Text = "✈️ Лететь к игроку"
-MainButton.BackgroundColor3 = Color3.new(0, 0.5, 1)
-MainButton.TextColor3 = Color3.new(1, 1, 1)
-MainButton.Font = Enum.Font.SourceSansBold
-MainButton.TextSize = 14
-MainButton.Parent = ButtonFrame
+-- FLY BUTTON
+local FlyButton = Instance.new("TextButton")
+FlyButton.Size = UDim2.new(1, -10, 0, 40)
+FlyButton.Position = UDim2.new(0, 5, 0, 0)
+FlyButton.Text = "✈️ Fly to player"
+FlyButton.BackgroundColor3 = Color3.new(0, 0.5, 1)
+FlyButton.TextColor3 = Color3.new(1, 1, 1)
+FlyButton.Font = Enum.Font.SourceSansBold
+FlyButton.TextSize = 14
+FlyButton.Parent = ButtonFrame
 
--- Кнопка "Стоп"
+-- STOP BUTTON
 local StopButton = Instance.new("TextButton")
 StopButton.Size = UDim2.new(1, -10, 0, 35)
 StopButton.Position = UDim2.new(0, 5, 0, 45)
-StopButton.Text = "🛑 СТОП (всё остановить)"
+StopButton.Text = "🛑 STOP"
 StopButton.BackgroundColor3 = Color3.new(1, 0, 0)
 StopButton.TextColor3 = Color3.new(1, 1, 1)
 StopButton.Font = Enum.Font.SourceSansBold
 StopButton.TextSize = 14
 StopButton.Parent = ButtonFrame
 
--- Кнопка "Ближайший враг"
+-- NEAREST BUTTON
 local NearestButton = Instance.new("TextButton")
 NearestButton.Size = UDim2.new(0.48, -5, 0, 30)
 NearestButton.Position = UDim2.new(0, 5, 0, 85)
-NearestButton.Text = "🎯 Ближайший"
+NearestButton.Text = "🎯 Nearest"
 NearestButton.BackgroundColor3 = Color3.new(0.8, 0.4, 0)
 NearestButton.TextColor3 = Color3.new(1, 1, 1)
 NearestButton.Font = Enum.Font.SourceSansBold
 NearestButton.TextSize = 12
 NearestButton.Parent = ButtonFrame
 
--- Кнопка "Авто-поиск"
+-- AUTO TARGET BUTTON
 local AutoTargetButton = Instance.new("TextButton")
 AutoTargetButton.Size = UDim2.new(0.48, -5, 0, 30)
 AutoTargetButton.Position = UDim2.new(0.52, 5, 0, 85)
-AutoTargetButton.Text = "🔄 Авто-поиск"
+AutoTargetButton.Text = "🔄 Auto-target"
 AutoTargetButton.BackgroundColor3 = Color3.new(0.5, 0, 0.5)
 AutoTargetButton.TextColor3 = Color3.new(1, 1, 1)
 AutoTargetButton.Font = Enum.Font.SourceSansBold
 AutoTargetButton.TextSize = 12
 AutoTargetButton.Parent = ButtonFrame
 
--- Настройки скорости полета
-local SettingsLabel = Instance.new("TextLabel")
-SettingsLabel.Size = UDim2.new(0.48, -5, 0, 20)
-SettingsLabel.Position = UDim2.new(0, 5, 0, 118)
-SettingsLabel.Text = "Скорость: 150"
-SettingsLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-SettingsLabel.BackgroundTransparency = 0.3
-SettingsLabel.TextColor3 = Color3.new(1, 1, 1)
-SettingsLabel.Font = Enum.Font.SourceSans
-SettingsLabel.TextSize = 11
-SettingsLabel.Parent = ButtonFrame
+-- ESP BUTTON
+local ESPButton = Instance.new("TextButton")
+ESPButton.Size = UDim2.new(0.48, -5, 0, 25)
+ESPButton.Position = UDim2.new(0, 5, 0, 120)
+ESPButton.Text = "👁️ ESP OFF"
+ESPButton.BackgroundColor3 = Color3.new(0.6, 0, 0.8)
+ESPButton.TextColor3 = Color3.new(1, 1, 1)
+ESPButton.Font = Enum.Font.SourceSansBold
+ESPButton.TextSize = 11
+ESPButton.Parent = ButtonFrame
 
-local SpeedSlider = Instance.new("TextBox")
-SpeedSlider.Size = UDim2.new(0.48, -5, 0, 20)
-SpeedSlider.Position = UDim2.new(0.52, 5, 0, 118)
-SpeedSlider.Text = "150"
-SpeedSlider.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
-SpeedSlider.TextColor3 = Color3.new(1, 1, 1)
-SpeedSlider.Font = Enum.Font.SourceSans
-SpeedSlider.TextSize = 12
-SpeedSlider.Parent = ButtonFrame
+-- SPEED SETTINGS
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Size = UDim2.new(0.48, -5, 0, 20)
+SpeedLabel.Position = UDim2.new(0, 5, 0, 150)
+SpeedLabel.Text = "Speed: 150"
+SpeedLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+SpeedLabel.BackgroundTransparency = 0.3
+SpeedLabel.TextColor3 = Color3.new(1, 1, 1)
+SpeedLabel.Font = Enum.Font.SourceSans
+SpeedLabel.TextSize = 11
+SpeedLabel.Parent = ButtonFrame
 
--- Настройка дистанции атаки
+local SpeedInput = Instance.new("TextBox")
+SpeedInput.Size = UDim2.new(0.48, -5, 0, 20)
+SpeedInput.Position = UDim2.new(0.52, 5, 0, 150)
+SpeedInput.Text = "150"
+SpeedInput.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+SpeedInput.TextColor3 = Color3.new(1, 1, 1)
+SpeedInput.Font = Enum.Font.SourceSans
+SpeedInput.TextSize = 12
+SpeedInput.Parent = ButtonFrame
+
+-- ATTACK DISTANCE SETTINGS
 local DistLabel = Instance.new("TextLabel")
 DistLabel.Size = UDim2.new(0.48, -5, 0, 20)
-DistLabel.Position = UDim2.new(0, 5, 0, 142)
-DistLabel.Text = "Дист. атаки: 10"
+DistLabel.Position = UDim2.new(0, 5, 0, 174)
+DistLabel.Text = "Attack dist: 10"
 DistLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 DistLabel.BackgroundTransparency = 0.3
 DistLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -132,21 +163,21 @@ DistLabel.Font = Enum.Font.SourceSans
 DistLabel.TextSize = 11
 DistLabel.Parent = ButtonFrame
 
-local DistSlider = Instance.new("TextBox")
-DistSlider.Size = UDim2.new(0.48, -5, 0, 20)
-DistSlider.Position = UDim2.new(0.52, 5, 0, 142)
-DistSlider.Text = "10"
-DistSlider.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
-DistSlider.TextColor3 = Color3.new(1, 1, 1)
-DistSlider.Font = Enum.Font.SourceSans
-DistSlider.TextSize = 12
-DistSlider.Parent = ButtonFrame
+local DistInput = Instance.new("TextBox")
+DistInput.Size = UDim2.new(0.48, -5, 0, 20)
+DistInput.Position = UDim2.new(0.52, 5, 0, 174)
+DistInput.Text = "10"
+DistInput.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+DistInput.TextColor3 = Color3.new(1, 1, 1)
+DistInput.Font = Enum.Font.SourceSans
+DistInput.TextSize = 12
+DistInput.Parent = ButtonFrame
 
--- Статус
+-- STATUS
 local StatusLabel = Instance.new("TextLabel")
 StatusLabel.Size = UDim2.new(1, -10, 0, 20)
-StatusLabel.Position = UDim2.new(0, 5, 0, 170)
-StatusLabel.Text = "Статус: Готов"
+StatusLabel.Position = UDim2.new(0, 5, 0, 200)
+StatusLabel.Text = "Status: Ready"
 StatusLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 StatusLabel.BackgroundTransparency = 0.3
 StatusLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -154,7 +185,217 @@ StatusLabel.Font = Enum.Font.SourceSans
 StatusLabel.TextSize = 12
 StatusLabel.Parent = ButtonFrame
 
--- ПЕРЕМЕННЫЕ
+-- ============================================
+-- ESP SYSTEM
+-- ============================================
+
+local espEnabled = false
+local espLabels = {}
+local espConnection = nil
+local healthConnections = {}
+
+local function createESP(plr)
+    if plr == player then return nil end
+    
+    if plr:FindFirstChild("ESP_" .. plr.Name) then
+        return plr:FindFirstChild("ESP_" .. plr.Name)
+    end
+    
+    if not plr.Character then return nil end
+    
+    local label = Instance.new("BillboardGui")
+    label.Name = "ESP_" .. plr.Name
+    label.Size = UDim2.new(0, 200, 0, 40)
+    label.StudsOffset = Vector3.new(0, 3.5, 0)
+    label.AlwaysOnTop = true
+    label.MaxDistance = 200
+    label.Parent = plr.Character
+    
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 0.6, 0)
+    text.Position = UDim2.new(0, 0, 0, 0)
+    text.BackgroundTransparency = 1
+    text.Text = plr.Name
+    text.TextColor3 = Color3.fromRGB(180, 50, 255)
+    text.TextScaled = true
+    text.Font = Enum.Font.GothamBold
+    text.TextStrokeTransparency = 0.2
+    text.TextStrokeColor3 = Color3.new(0, 0, 0)
+    text.Parent = label
+    
+    local healthBar = Instance.new("Frame")
+    healthBar.Size = UDim2.new(1, 0, 0, 4)
+    healthBar.Position = UDim2.new(0, 0, 0.7, 2)
+    healthBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    healthBar.BorderSizePixel = 0
+    healthBar.Parent = label
+    
+    local healthBG = Instance.new("Frame")
+    healthBG.Size = UDim2.new(1, 0, 1, 0)
+    healthBG.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    healthBG.BorderSizePixel = 0
+    healthBG.Parent = healthBar
+    
+    local distLabel = Instance.new("TextLabel")
+    distLabel.Size = UDim2.new(1, 0, 0.3, 0)
+    distLabel.Position = UDim2.new(0, 0, 0.6, 0)
+    distLabel.BackgroundTransparency = 1
+    distLabel.Text = "0m"
+    distLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    distLabel.TextSize = 12
+    distLabel.Font = Enum.Font.Gotham
+    distLabel.TextStrokeTransparency = 0.3
+    distLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+    distLabel.Parent = label
+    
+    local connection = game:GetService("RunService").Heartbeat:Connect(function()
+        if not plr or not plr.Character then return end
+        
+        local humanoid = plr.Character:FindFirstChild("Humanoid")
+        if humanoid then
+            local health = humanoid.Health / humanoid.MaxHealth
+            healthBar.Size = UDim2.new(math.clamp(health, 0, 1), 0, 0, 4)
+            if health > 0.5 then
+                healthBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+            elseif health > 0.25 then
+                healthBar.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+            else
+                healthBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+            end
+        end
+        
+        local localChar = player.Character
+        if localChar then
+            local localRoot = localChar:FindFirstChild("HumanoidRootPart")
+            local targetRoot = plr.Character:FindFirstChild("HumanoidRootPart")
+            if localRoot and targetRoot then
+                local dist = (localRoot.Position - targetRoot.Position).Magnitude
+                distLabel.Text = math.floor(dist) .. "m"
+                if dist <= 10 then
+                    distLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+                elseif dist <= 30 then
+                    distLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
+                else
+                    distLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+                end
+            end
+        end
+    end)
+    
+    table.insert(healthConnections, connection)
+    return label
+end
+
+local function updateESP()
+    for _, label in ipairs(espLabels) do
+        pcall(function() label:Destroy() end)
+    end
+    espLabels = {}
+    
+    for _, conn in ipairs(healthConnections) do
+        pcall(function() conn:Disconnect() end)
+    end
+    healthConnections = {}
+    
+    if not espEnabled then return end
+    
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr ~= player and plr.Character then
+            local label = createESP(plr)
+            if label then
+                table.insert(espLabels, label)
+            end
+        end
+    end
+end
+
+local function enableESP()
+    if espEnabled then return end
+    espEnabled = true
+    updateESP()
+    
+    if espConnection then
+        espConnection:Disconnect()
+        espConnection = nil
+    end
+    
+    espConnection = game.Players.PlayerAdded:Connect(function(plr)
+        task.wait(0.5)
+        if espEnabled and plr.Character then
+            local label = createESP(plr)
+            if label then
+                table.insert(espLabels, label)
+            end
+        end
+    end)
+    
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr ~= player then
+            plr.CharacterAdded:Connect(function(character)
+                task.wait(0.5)
+                if espEnabled then
+                    if plr:FindFirstChild("ESP_" .. plr.Name) then
+                        plr:FindFirstChild("ESP_" .. plr.Name):Destroy()
+                    end
+                    local label = createESP(plr)
+                    if label then
+                        table.insert(espLabels, label)
+                    end
+                end
+            end)
+        end
+    end
+    
+    StatusLabel.Text = "Status: ESP ON"
+    ESPButton.Text = "👁️ ESP ON"
+    ESPButton.BackgroundColor3 = Color3.fromRGB(0.8, 0, 1)
+end
+
+local function disableESP()
+    if not espEnabled then return end
+    espEnabled = false
+    
+    for _, label in ipairs(espLabels) do
+        pcall(function() label:Destroy() end)
+    end
+    espLabels = {}
+    
+    for _, conn in ipairs(healthConnections) do
+        pcall(function() conn:Disconnect() end)
+    end
+    healthConnections = {}
+    
+    if espConnection then
+        espConnection:Disconnect()
+        espConnection = nil
+    end
+    
+    StatusLabel.Text = "Status: ESP OFF"
+    ESPButton.Text = "👁️ ESP OFF"
+    ESPButton.BackgroundColor3 = Color3.fromRGB(0.6, 0, 0.8)
+end
+
+local function toggleESP()
+    if espEnabled then
+        disableESP()
+    else
+        enableESP()
+    end
+    return espEnabled
+end
+
+-- ============================================
+-- ESP BUTTON HANDLER
+-- ============================================
+
+ESPButton.MouseButton1Click:Connect(function()
+    toggleESP()
+end)
+
+-- ============================================
+-- VARIABLES
+-- ============================================
+
 local selectedPlayer = nil
 local playerButtons = {}
 local isActive = false
@@ -163,7 +404,6 @@ local attackDistance = 10
 local autoTargetEnabled = false
 local autoTargetConnection = nil
 
--- Переменные для подключений
 local runConnection = nil
 local clickConnection = nil
 local cameraConnection = nil
@@ -171,15 +411,13 @@ local characterCheckConnection = nil
 local flyBodyPosition = nil
 local flyBodyGyro = nil
 
--- Переменные для автокликера
 local clickDelay = 0.15
 local canClick = true
 
 -- ============================================
--- ФУНКЦИЯ ПОИСКА БЛИЖАЙШИХ ВРАГОВ
+-- FUNCTIONS
 -- ============================================
 
--- Функция поиска всех игроков с расстоянием
 local function getAllPlayersWithDistance()
     local localPlayer = game.Players.LocalPlayer
     local character = localPlayer.Character
@@ -213,7 +451,6 @@ local function getAllPlayersWithDistance()
         end
     end
     
-    -- Сортируем по расстоянию
     table.sort(playersData, function(a, b)
         return a.distance < b.distance
     end)
@@ -221,94 +458,16 @@ local function getAllPlayersWithDistance()
     return playersData
 end
 
--- Функция поиска ближайшего живого врага
 local function findNearestEnemy()
     local playersData = getAllPlayersWithDistance()
-    
     for _, data in ipairs(playersData) do
         if data.isAlive then
             return data.player, data.distance
         end
     end
-    
     return nil, nil
 end
 
--- Функция поиска всех врагов в радиусе
-local function findEnemiesInRadius(radius)
-    local playersData = getAllPlayersWithDistance()
-    local enemies = {}
-    
-    for _, data in ipairs(playersData) do
-        if data.isAlive and data.distance <= radius then
-            table.insert(enemies, {
-                player = data.player,
-                distance = data.distance,
-                rootPart = data.rootPart
-            })
-        end
-    end
-    
-    return enemies
-end
-
--- Функция поиска врага с наименьшим здоровьем
-local function findLowestHealthEnemy()
-    local playersData = getAllPlayersWithDistance()
-    local lowestHealth = math.huge
-    local targetPlayer = nil
-    
-    for _, data in ipairs(playersData) do
-        if data.isAlive and data.humanoid then
-            local health = data.humanoid.Health
-            if health < lowestHealth then
-                lowestHealth = health
-                targetPlayer = data.player
-            end
-        end
-    end
-    
-    return targetPlayer, lowestHealth
-end
-
--- Функция поиска врага с наибольшим здоровьем
-local function findHighestHealthEnemy()
-    local playersData = getAllPlayersWithDistance()
-    local highestHealth = 0
-    local targetPlayer = nil
-    
-    for _, data in ipairs(playersData) do
-        if data.isAlive and data.humanoid then
-            local health = data.humanoid.Health
-            if health > highestHealth then
-                highestHealth = health
-                targetPlayer = data.player
-            end
-        end
-    end
-    
-    return targetPlayer, highestHealth
-end
-
--- Функция поиска ближайшего врага с учетом приоритетов
-local function findPriorityEnemy(priority)
-    -- priority: "nearest" - ближайший, "lowest" - с малым хп, "highest" - с большим хп
-    if priority == "nearest" then
-        return findNearestEnemy()
-    elseif priority == "lowest" then
-        return findLowestHealthEnemy()
-    elseif priority == "highest" then
-        return findHighestHealthEnemy()
-    else
-        return findNearestEnemy()
-    end
-end
-
--- ============================================
--- ОСТАЛЬНЫЕ ФУНКЦИИ
--- ============================================
-
--- ФУНКЦИЯ ОСТАНОВКИ ВСЕГО
 local function stopEverything()
     if runConnection then
         runConnection:Disconnect()
@@ -357,19 +516,22 @@ local function stopEverything()
     isActive = false
     canClick = true
     
-    MainButton.BackgroundColor3 = Color3.new(0, 0.5, 1)
+    FlyButton.BackgroundColor3 = Color3.new(0, 0.5, 1)
     if selectedPlayer then
-        MainButton.Text = "✈️ Лететь к " .. selectedPlayer.Name
-        StatusLabel.Text = "Статус: Выбран " .. selectedPlayer.Name
+        FlyButton.Text = "✈️ Fly to " .. selectedPlayer.Name
+        StatusLabel.Text = "Status: Selected " .. selectedPlayer.Name
     else
-        MainButton.Text = "✈️ Лететь к игроку"
-        StatusLabel.Text = "Статус: Готов"
+        FlyButton.Text = "✈️ Fly to player"
+        StatusLabel.Text = "Status: Ready"
     end
 end
 
--- ФУНКЦИЯ ПОЛНОГО ЗАКРЫТИЯ
 local function closeScript()
     stopEverything()
+    
+    if espEnabled then
+        disableESP()
+    end
     
     if autoTargetConnection then
         autoTargetConnection:Disconnect()
@@ -390,10 +552,9 @@ local function closeScript()
         ScreenGui:Destroy()
     end
     
-    print("✅ Скрипт полностью остановлен и закрыт")
+    print("✅ Script stopped and closed")
 end
 
--- ФУНКЦИЯ АВТОМАТИЧЕСКОГО ПЕРЕЗАПУСКА ПОСЛЕ СМЕРТИ
 local function autoRestartOnRespawn()
     if characterCheckConnection then
         characterCheckConnection:Disconnect()
@@ -403,30 +564,36 @@ local function autoRestartOnRespawn()
     local localPlayer = game.Players.LocalPlayer
     
     characterCheckConnection = localPlayer.CharacterAdded:Connect(function(newCharacter)
+        task.wait(0.5)
+        
+        if not ScreenGui.Parent then
+            ScreenGui.Parent = player:WaitForChild("PlayerGui")
+        end
+        
+        updatePlayerList()
+        
         if isActive and selectedPlayer then
-            task.wait(0.5)
-            
             if selectedPlayer and selectedPlayer.Character then
                 local humanoid = selectedPlayer.Character:FindFirstChild("Humanoid")
                 if humanoid and humanoid.Health > 0 then
-                    StatusLabel.Text = "Статус: 🔄 Перезапуск после смерти..."
+                    StatusLabel.Text = "Status: 🔄 Restart after death..."
                     startCameraFollow(selectedPlayer)
                     startFlying(selectedPlayer)
-                    StatusLabel.Text = "Статус: ✅ Перезапущено!"
+                    StatusLabel.Text = "Status: ✅ Restarted!"
                 else
-                    StatusLabel.Text = "Статус: ⚠️ Цель мертва, ожидание..."
+                    StatusLabel.Text = "Status: ⚠️ Target dead, waiting..."
                 end
             end
+        end
+        
+        if espEnabled then
+            updateESP()
         end
     end)
 end
 
--- ФУНКЦИЯ КЛИКА
 local function performClick()
-    if not canClick then
-        return
-    end
-    
+    if not canClick then return end
     canClick = false
     
     pcall(function()
@@ -460,49 +627,34 @@ local function performClick()
     canClick = true
 end
 
--- ФУНКЦИЯ ПРИКЛЕИВАНИЯ КАМЕРЫ
 local function startCameraFollow(targetPlayer)
     if cameraConnection then
         cameraConnection:Disconnect()
         cameraConnection = nil
     end
     
-    if not targetPlayer then
-        return
-    end
+    if not targetPlayer then return end
     
     local camera = workspace.CurrentCamera
     camera.CameraType = Enum.CameraType.Scriptable
     
     cameraConnection = game:GetService("RunService").RenderStepped:Connect(function()
         local targetCharacter = targetPlayer.Character
-        if not targetCharacter then
-            return
-        end
-        
+        if not targetCharacter then return end
         local targetRoot = targetCharacter:FindFirstChild("HumanoidRootPart")
-        if not targetRoot then
-            return
-        end
+        if not targetRoot then return end
         
         local localPlayer = game.Players.LocalPlayer
         local character = localPlayer.Character
-        if not character then
-            return
-        end
-        
+        if not character then return end
         local localRoot = character:FindFirstChild("HumanoidRootPart")
-        if not localRoot then
-            return
-        end
+        if not localRoot then return end
         
         local distance = (localRoot.Position - targetRoot.Position).Magnitude
-        
         if distance <= 15 then
             local targetPosition = targetRoot.Position
             local cameraOffset = Vector3.new(0, 12, 12)
             local cameraPosition = targetPosition + cameraOffset
-            
             camera.CFrame = CFrame.lookAt(cameraPosition, targetPosition)
         else
             camera.CameraType = Enum.CameraType.Custom
@@ -510,14 +662,13 @@ local function startCameraFollow(targetPlayer)
     end)
 end
 
--- ФУНКЦИЯ АВТОКЛИКЕРА
 local function startClicking(targetPlayer)
     if clickConnection then
         clickConnection:Disconnect()
         clickConnection = nil
     end
     
-    StatusLabel.Text = "Статус: 🔥 Автокликер включен"
+    StatusLabel.Text = "Status: 🔥 Auto-clicker ON"
     
     clickConnection = game:GetService("RunService").Heartbeat:Connect(function()
         if not targetPlayer or not targetPlayer.Character then
@@ -527,9 +678,7 @@ local function startClicking(targetPlayer)
         
         local localPlayer = game.Players.LocalPlayer
         local character = localPlayer.Character
-        if not character then
-            return
-        end
+        if not character then return end
         
         local targetCharacter = targetPlayer.Character
         if not targetCharacter then
@@ -542,18 +691,16 @@ local function startClicking(targetPlayer)
         
         if rootPart and targetRoot then
             local distance = (rootPart.Position - targetRoot.Position).Magnitude
-            
             if distance <= attackDistance then
                 performClick()
-                StatusLabel.Text = "Статус: ⚔️ Атака " .. targetPlayer.Name .. " (дист. " .. math.floor(distance) .. ")"
+                StatusLabel.Text = "Status: ⚔️ Attacking " .. targetPlayer.Name .. " (dist " .. math.floor(distance) .. ")"
             else
-                StatusLabel.Text = "Статус: ✈️ Лечу к " .. targetPlayer.Name .. " (дист. " .. math.floor(distance) .. ")"
+                StatusLabel.Text = "Status: ✈️ Flying to " .. targetPlayer.Name .. " (dist " .. math.floor(distance) .. ")"
             end
         end
     end)
 end
 
--- ФУНКЦИЯ ПОЛЕТА
 local function startFlying(targetPlayer)
     if runConnection then
         runConnection:Disconnect()
@@ -570,26 +717,24 @@ local function startFlying(targetPlayer)
         flyBodyGyro = nil
     end
     
-    if not targetPlayer then
-        return
-    end
+    if not targetPlayer then return end
     
     local localPlayer = game.Players.LocalPlayer
     local character = localPlayer.Character
     if not character then
-        StatusLabel.Text = "Статус: ⏳ Ожидание персонажа..."
+        StatusLabel.Text = "Status: ⏳ Waiting for character..."
         return
     end
     
     local humanoid = character:FindFirstChild("Humanoid")
     if not humanoid then
-        StatusLabel.Text = "Статус: ⏳ Ожидание персонажа..."
+        StatusLabel.Text = "Status: ⏳ Waiting for character..."
         return
     end
     
     local rootPart = character:FindFirstChild("HumanoidRootPart")
     if not rootPart then
-        StatusLabel.Text = "Статус: ⚠️ RootPart не найден"
+        StatusLabel.Text = "Status: ⚠️ RootPart not found"
         return
     end
     
@@ -626,14 +771,9 @@ local function startFlying(targetPlayer)
         end
         
         local localChar = game.Players.LocalPlayer.Character
-        if not localChar then
-            return
-        end
-        
+        if not localChar then return end
         local localRoot = localChar:FindFirstChild("HumanoidRootPart")
-        if not localRoot then
-            return
-        end
+        if not localRoot then return end
         
         if not flyBodyPosition or not flyBodyGyro then
             stopEverything()
@@ -656,23 +796,22 @@ local function startFlying(targetPlayer)
             if not clickConnection then
                 startClicking(targetPlayer)
             end
-            MainButton.BackgroundColor3 = Color3.new(1, 0.3, 0)
-            MainButton.Text = "⚔️ Атакую " .. targetPlayer.Name
-            StatusLabel.Text = "Статус: 💥 РЯДОМ с " .. targetPlayer.Name
+            FlyButton.BackgroundColor3 = Color3.new(1, 0.3, 0)
+            FlyButton.Text = "⚔️ Attacking " .. targetPlayer.Name
+            StatusLabel.Text = "Status: 💥 NEAR " .. targetPlayer.Name
         else
-            MainButton.BackgroundColor3 = Color3.new(0, 1, 0)
-            MainButton.Text = "✈️ Лечу к " .. targetPlayer.Name .. " (скор. " .. flySpeed .. ")"
-            StatusLabel.Text = "Статус: ✈️ Лечу к " .. targetPlayer.Name .. " (" .. math.floor(distance) .. " ст.)"
+            FlyButton.BackgroundColor3 = Color3.new(0, 1, 0)
+            FlyButton.Text = "✈️ Flying to " .. targetPlayer.Name .. " (speed " .. flySpeed .. ")"
+            StatusLabel.Text = "Status: ✈️ Flying to " .. targetPlayer.Name .. " (" .. math.floor(distance) .. "m)"
         end
     end)
 end
 
--- ЗАПУСК ВСЕГО
 local function startAll(targetPlayer)
     stopEverything()
     
     if not targetPlayer then
-        StatusLabel.Text = "Статус: ⚠️ Выберите игрока!"
+        StatusLabel.Text = "Status: ⚠️ Select a player!"
         return
     end
     
@@ -680,15 +819,22 @@ local function startAll(targetPlayer)
     startFlying(targetPlayer)
     
     isActive = true
-    StatusLabel.Text = "Статус: 🚀 Запущено"
+    StatusLabel.Text = "Status: 🚀 Started"
 end
 
--- ОБНОВЛЕНИЕ СПИСКА ИГРОКОВ С ОТОБРАЖЕНИЕМ ДИСТАНЦИИ
+-- ============================================
+-- UPDATE PLAYER LIST
+-- ============================================
+
 local function updatePlayerList()
     for _, button in ipairs(playerButtons) do
         button:Destroy()
     end
     playerButtons = {}
+    
+    if not ScreenGui or not ScreenGui.Parent then
+        return
+    end
     
     local playersData = getAllPlayersWithDistance()
     local canvasHeight = #playersData * 35 + 5
@@ -704,9 +850,8 @@ local function updatePlayerList()
         playerButton.Size = UDim2.new(1, -10, 0, 30)
         playerButton.Position = UDim2.new(0, 5, 0, (i - 1) * 35 + 5)
         
-        -- Отображаем имя + расстояние + статус
         local statusText = isAlive and "🟢" or "🔴"
-        playerButton.Text = statusText .. " " .. plr.Name .. " (" .. math.floor(distance) .. " ст.)"
+        playerButton.Text = statusText .. " " .. plr.Name .. " (" .. math.floor(distance) .. "m)"
         
         playerButton.BackgroundColor3 = Color3.new(0.25, 0.25, 0.25)
         playerButton.TextColor3 = isAlive and Color3.new(1, 1, 1) or Color3.new(0.5, 0.5, 0.5)
@@ -720,7 +865,7 @@ local function updatePlayerList()
         
         playerButton.MouseButton1Click:Connect(function()
             if not isAlive then
-                StatusLabel.Text = "Статус: ⚠️ Игрок мертв!"
+                StatusLabel.Text = "Status: ⚠️ Player is dead!"
                 return
             end
             
@@ -735,8 +880,8 @@ local function updatePlayerList()
             end
             playerButton.BackgroundColor3 = Color3.new(0, 0.5, 0)
             
-            MainButton.Text = "✈️ Лететь к " .. plr.Name
-            StatusLabel.Text = "Статус: Выбран " .. plr.Name .. " (" .. math.floor(distance) .. " ст.)"
+            FlyButton.Text = "✈️ Fly to " .. plr.Name
+            StatusLabel.Text = "Status: Selected " .. plr.Name .. " (" .. math.floor(distance) .. "m)"
         end)
         
         table.insert(playerButtons, playerButton)
@@ -744,63 +889,54 @@ local function updatePlayerList()
 end
 
 -- ============================================
--- ОБРАБОТЧИКИ КНОПОК
+-- BUTTON HANDLERS
 -- ============================================
 
--- Кнопка ЗАКРЫТИЯ
 CloseButton.MouseButton1Click:Connect(function()
     closeScript()
 end)
 
--- Основная кнопка
-MainButton.MouseButton1Click:Connect(function()
+FlyButton.MouseButton1Click:Connect(function()
     if isActive then
         stopEverything()
         return
     end
     
     if not selectedPlayer then
-        StatusLabel.Text = "Статус: ⚠️ Выберите игрока!"
+        StatusLabel.Text = "Status: ⚠️ Select a player!"
         return
     end
     
     startAll(selectedPlayer)
 end)
 
--- Кнопка Стоп
 StopButton.MouseButton1Click:Connect(function()
     stopEverything()
-    StatusLabel.Text = "Статус: ⏹️ Остановлено"
+    StatusLabel.Text = "Status: ⏹️ Stopped"
 end)
 
--- КНОПКА "БЛИЖАЙШИЙ ВРАГ"
 NearestButton.MouseButton1Click:Connect(function()
     local nearest, distance = findNearestEnemy()
     
     if nearest then
         if isActive then stopEverything() end
-        
         selectedPlayer = nearest
         updatePlayerList()
-        
-        StatusLabel.Text = "Статус: 🎯 Ближайший - " .. nearest.Name .. " (" .. math.floor(distance) .. " ст.)"
-        MainButton.Text = "✈️ Лететь к " .. nearest.Name
-        
-        -- Автоматически запускаем
+        StatusLabel.Text = "Status: 🎯 Nearest - " .. nearest.Name .. " (" .. math.floor(distance) .. "m)"
+        FlyButton.Text = "✈️ Fly to " .. nearest.Name
         startAll(selectedPlayer)
     else
-        StatusLabel.Text = "Статус: ⚠️ Нет живых врагов!"
+        StatusLabel.Text = "Status: ⚠️ No alive enemies!"
     end
 end)
 
--- КНОПКА "АВТО-ПОИСК"
 AutoTargetButton.MouseButton1Click:Connect(function()
     autoTargetEnabled = not autoTargetEnabled
     
     if autoTargetEnabled then
         AutoTargetButton.BackgroundColor3 = Color3.new(0, 1, 0)
-        AutoTargetButton.Text = "🔄 Авто-поиск ВКЛ"
-        StatusLabel.Text = "Статус: 🔄 Авто-поиск включен"
+        AutoTargetButton.Text = "🔄 Auto-target ON"
+        StatusLabel.Text = "Status: 🔄 Auto-target ON"
         
         if autoTargetConnection then
             autoTargetConnection:Disconnect()
@@ -810,7 +946,6 @@ AutoTargetButton.MouseButton1Click:Connect(function()
         autoTargetConnection = game:GetService("RunService").Heartbeat:Connect(function()
             if not isActive then return end
             
-            -- Проверяем, жива ли текущая цель
             local targetAlive = false
             if selectedPlayer and selectedPlayer.Character then
                 local humanoid = selectedPlayer.Character:FindFirstChild("Humanoid")
@@ -819,24 +954,22 @@ AutoTargetButton.MouseButton1Click:Connect(function()
                 end
             end
             
-            -- Если цель мертва или ее нет - ищем новую
             if not targetAlive then
                 local nearest, distance = findNearestEnemy()
                 if nearest and nearest ~= selectedPlayer then
                     selectedPlayer = nearest
                     updatePlayerList()
-                    StatusLabel.Text = "🔄 Новая цель: " .. nearest.Name .. " (" .. math.floor(distance) .. " ст.)"
-                    -- Перезапускаем полет к новой цели
+                    StatusLabel.Text = "🔄 New target: " .. nearest.Name .. " (" .. math.floor(distance) .. "m)"
                     startAll(selectedPlayer)
                 elseif not nearest then
-                    StatusLabel.Text = "⚠️ Нет живых врагов, ожидание..."
+                    StatusLabel.Text = "⚠️ No alive enemies, waiting..."
                 end
             end
         end)
     else
         AutoTargetButton.BackgroundColor3 = Color3.new(0.5, 0, 0.5)
-        AutoTargetButton.Text = "🔄 Авто-поиск"
-        StatusLabel.Text = "Статус: Авто-поиск выключен"
+        AutoTargetButton.Text = "🔄 Auto-target"
+        StatusLabel.Text = "Status: Auto-target OFF"
         
         if autoTargetConnection then
             autoTargetConnection:Disconnect()
@@ -845,39 +978,37 @@ AutoTargetButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- НАСТРОЙКА СКОРОСТИ
-SpeedSlider.FocusLost:Connect(function()
-    local value = tonumber(SpeedSlider.Text)
+SpeedInput.FocusLost:Connect(function()
+    local value = tonumber(SpeedInput.Text)
     if value and value > 0 then
         flySpeed = value
-        SettingsLabel.Text = "Скорость: " .. tostring(value)
-        StatusLabel.Text = "Статус: Скорость изменена на " .. value
+        SpeedLabel.Text = "Speed: " .. tostring(value)
+        StatusLabel.Text = "Status: Speed changed to " .. value
     else
-        SpeedSlider.Text = tostring(flySpeed)
+        SpeedInput.Text = tostring(flySpeed)
     end
 end)
 
--- НАСТРОЙКА ДИСТАНЦИИ АТАКИ
-DistSlider.FocusLost:Connect(function()
-    local value = tonumber(DistSlider.Text)
+DistInput.FocusLost:Connect(function()
+    local value = tonumber(DistInput.Text)
     if value and value > 0 then
         attackDistance = value
-        DistLabel.Text = "Дист. атаки: " .. tostring(value)
-        StatusLabel.Text = "Статус: Дистанция изменена на " .. value
+        DistLabel.Text = "Attack dist: " .. tostring(value)
+        StatusLabel.Text = "Status: Attack distance changed to " .. value
     else
-        DistSlider.Text = tostring(attackDistance)
+        DistInput.Text = tostring(attackDistance)
     end
 end)
 
 -- ============================================
--- ГОРЯЧИЕ КЛАВИШИ
+-- HOTKEYS
 -- ============================================
 
 game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     
     if input.KeyCode == Enum.KeyCode.F then
-        MainButton.MouseButton1Click:Fire()
+        FlyButton.MouseButton1Click:Fire()
     end
     
     if input.KeyCode == Enum.KeyCode.X then
@@ -891,10 +1022,14 @@ game:GetService("UserInputService").InputBegan:Connect(function(input, gameProce
     if input.KeyCode == Enum.KeyCode.T then
         AutoTargetButton.MouseButton1Click:Fire()
     end
+    
+    if input.KeyCode == Enum.KeyCode.E then
+        ESPButton.MouseButton1Click:Fire()
+    end
 end)
 
 -- ============================================
--- ЗАПУСК
+-- STARTUP
 -- ============================================
 
 autoRestartOnRespawn()
@@ -903,19 +1038,24 @@ game.Players.PlayerAdded:Connect(updatePlayerList)
 game.Players.PlayerRemoving:Connect(updatePlayerList)
 updatePlayerList()
 
--- Обновление списка каждые 3 секунды (чаще для точности)
 spawn(function()
     while true do
         task.wait(3)
-        updatePlayerList()
+        if ScreenGui and ScreenGui.Parent then
+            updatePlayerList()
+        else
+            ScreenGui.Parent = player:WaitForChild("PlayerGui")
+        end
     end
 end)
 
-StatusLabel.Text = "Статус: ✅ Готов! Нажми R для поиска ближайшего"
+StatusLabel.Text = "Status: ✅ Ready! Press R for nearest"
 
-print("✅ Скрипт загружен!")
-print("📌 Горячие клавиши:")
-print("   F - Старт/Стоп")
-print("   X - Остановка")
-print("   R - Ближайший враг")
-print("   T - Авто-поиск цели")
+print("✅ Script loaded!")
+print("📌 Hotkeys:")
+print("   F - Fly/Stop")
+print("   X - Stop all")
+print("   R - Nearest enemy")
+print("   T - Auto-target")
+print("   E - Toggle ESP")
+print("✅ GUI does NOT disappear after death!")
