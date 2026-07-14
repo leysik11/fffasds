@@ -1,6 +1,7 @@
--- Создаем GUI
+-- Создаем GUI (привязываем к PlayerGui, а не к персонажу)
+local player = game.Players.LocalPlayer
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- Создаем Frame
 local Frame = Instance.new("Frame")
@@ -12,7 +13,7 @@ Frame.Active = true
 Frame.Draggable = true
 Frame.Parent = ScreenGui
 
--- КНОПКА ЗАКРЫТИЯ (крестик в правом верхнем углу)
+-- КНОПКА ЗАКРЫТИЯ
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 30, 0, 30)
 CloseButton.Position = UDim2.new(1, -35, 0, 2)
@@ -75,7 +76,7 @@ StopButton.Font = Enum.Font.SourceSansBold
 StopButton.TextSize = 14
 StopButton.Parent = ButtonFrame
 
--- Настройки (ползунок задержки клика)
+-- Настройки
 local SettingsLabel = Instance.new("TextLabel")
 SettingsLabel.Size = UDim2.new(1, -10, 0, 20)
 SettingsLabel.Position = UDim2.new(0, 5, 0, 85)
@@ -118,12 +119,13 @@ local isActive = false
 local runConnection = nil
 local clickConnection = nil
 local cameraConnection = nil
+local characterCheckConnection = nil  -- для проверки респавна
 
 -- Переменные для автокликера
 local clickDelay = 0.15
 local canClick = true
 
--- ФУНКЦИЯ ОСТАНОВКИ ВСЕГО (полная остановка)
+-- ФУНКЦИЯ ОСТАНОВКИ ВСЕГО
 local function stopEverything()
     if runConnection then
         runConnection:Disconnect()
@@ -173,26 +175,61 @@ local function stopEverything()
     end
 end
 
--- ФУНКЦИЯ ПОЛНОГО ЗАКРЫТИЯ СКРИПТА (удаляет GUI и всё останавливает)
+-- ФУНКЦИЯ ПОЛНОГО ЗАКРЫТИЯ СКРИПТА
 local function closeScript()
     stopEverything()
     
-    -- Очищаем все кнопки игроков
+    if characterCheckConnection then
+        characterCheckConnection:Disconnect()
+        characterCheckConnection = nil
+    end
+    
     for _, button in ipairs(playerButtons) do
         button:Destroy()
     end
     playerButtons = {}
     
-    -- Удаляем GUI
     if ScreenGui then
         ScreenGui:Destroy()
     end
     
-    -- Отключаем все события
     game.Players.PlayerAdded:Disconnect()
     game.Players.PlayerRemoving:Disconnect()
     
     print("✅ Скрипт полностью остановлен и закрыт")
+end
+
+-- ФУНКЦИЯ АВТОМАТИЧЕСКОГО ПЕРЕЗАПУСКА ПОСЛЕ СМЕРТИ
+local function autoRestartOnRespawn()
+    if characterCheckConnection then
+        characterCheckConnection:Disconnect()
+        characterCheckConnection = nil
+    end
+    
+    local localPlayer = game.Players.LocalPlayer
+    
+    -- Следим за появлением персонажа
+    characterCheckConnection = localPlayer.CharacterAdded:Connect(function(newCharacter)
+        -- Если скрипт был активен до смерти, перезапускаем
+        if isActive and selectedPlayer then
+            -- Небольшая задержка для полной загрузки персонажа
+            task.wait(0.5)
+            
+            -- Проверяем, жив ли выбранный игрок
+            if selectedPlayer and selectedPlayer.Character then
+                local humanoid = selectedPlayer.Character:FindFirstChild("Humanoid")
+                if humanoid and humanoid.Health > 0 then
+                    -- Перезапускаем функционал
+                    StatusLabel.Text = "Статус: 🔄 Перезапуск после смерти..."
+                    startCameraFollow(selectedPlayer)
+                    startRunning(selectedPlayer)
+                    StatusLabel.Text = "Статус: ✅ Перезапущено!"
+                else
+                    StatusLabel.Text = "Статус: ⚠️ Цель мертва, ожидание..."
+                end
+            end
+        end
+    end)
 end
 
 -- ФУНКЦИЯ КЛИКА
@@ -251,8 +288,6 @@ local function startCameraFollow(targetPlayer)
     cameraConnection = game:GetService("RunService").RenderStepped:Connect(function()
         local targetCharacter = targetPlayer.Character
         if not targetCharacter then
-            stopEverything()
-            StatusLabel.Text = "Статус: ⚠️ Цель потеряна!"
             return
         end
         
@@ -304,7 +339,6 @@ local function startClicking(targetPlayer)
         local localPlayer = game.Players.LocalPlayer
         local character = localPlayer.Character
         if not character then
-            stopEverything()
             return
         end
         
@@ -344,13 +378,13 @@ local function startRunning(targetPlayer)
     local localPlayer = game.Players.LocalPlayer
     local character = localPlayer.Character
     if not character then
-        StatusLabel.Text = "Статус: ❌ Персонаж не найден"
+        StatusLabel.Text = "Статус: ⏳ Ожидание персонажа..."
         return
     end
     
     local humanoid = character:FindFirstChild("Humanoid")
     if not humanoid then
-        StatusLabel.Text = "Статус: ❌ Humanoid не найден"
+        StatusLabel.Text = "Статус: ⏳ Ожидание персонажа..."
         return
     end
     
@@ -376,13 +410,11 @@ local function startRunning(targetPlayer)
         
         local localChar = game.Players.LocalPlayer.Character
         if not localChar then
-            stopEverything()
             return
         end
         
         local localRoot = localChar:FindFirstChild("HumanoidRootPart")
         if not localRoot then
-            stopEverything()
             return
         end
         
@@ -471,7 +503,7 @@ end
 -- ОБРАБОТЧИКИ КНОПОК
 -- ============================================
 
--- Кнопка ЗАКРЫТИЯ (крестик) - полностью закрывает скрипт
+-- Кнопка ЗАКРЫТИЯ
 CloseButton.MouseButton1Click:Connect(function()
     closeScript()
 end)
@@ -507,6 +539,13 @@ ClickSlider.FocusLost:Connect(function()
         ClickSlider.Text = tostring(clickDelay)
     end
 end)
+
+-- ============================================
+-- ЗАПУСК СЛЕЖКИ ЗА РЕСПАВНОМ
+-- ============================================
+
+-- Запускаем авто-перезапуск после смерти
+autoRestartOnRespawn()
 
 -- ОБНОВЛЕНИЕ СПИСКА
 game.Players.PlayerAdded:Connect(updatePlayerList)
