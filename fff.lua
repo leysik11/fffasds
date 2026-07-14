@@ -12,10 +12,22 @@ Frame.Active = true
 Frame.Draggable = true
 Frame.Parent = ScreenGui
 
+-- КНОПКА ЗАКРЫТИЯ (крестик в правом верхнем углу)
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 2)
+CloseButton.Text = "✕"
+CloseButton.BackgroundColor3 = Color3.new(1, 0, 0)
+CloseButton.BackgroundTransparency = 0.3
+CloseButton.TextColor3 = Color3.new(1, 1, 1)
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.TextSize = 18
+CloseButton.Parent = Frame
+
 -- Заголовок
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, 0, 0, 30)
-TitleLabel.Position = UDim2.new(0, 0, 0, 0)
+TitleLabel.Size = UDim2.new(1, -40, 0, 30)
+TitleLabel.Position = UDim2.new(0, 5, 0, 0)
 TitleLabel.Text = "Игроки на сервере"
 TitleLabel.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
 TitleLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -111,7 +123,79 @@ local cameraConnection = nil
 local clickDelay = 0.15
 local canClick = true
 
--- ФУНКЦИЯ КЛИКА (улучшенная)
+-- ФУНКЦИЯ ОСТАНОВКИ ВСЕГО (полная остановка)
+local function stopEverything()
+    if runConnection then
+        runConnection:Disconnect()
+        runConnection = nil
+    end
+    
+    if clickConnection then
+        clickConnection:Disconnect()
+        clickConnection = nil
+    end
+    
+    if cameraConnection then
+        cameraConnection:Disconnect()
+        cameraConnection = nil
+    end
+    
+    -- Возвращаем камеру в нормальный режим
+    pcall(function()
+        local camera = workspace.CurrentCamera
+        camera.CameraType = Enum.CameraType.Custom
+    end)
+    
+    -- Останавливаем персонажа
+    local localPlayer = game.Players.LocalPlayer
+    local character = localPlayer.Character
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            local rootPart = character:FindFirstChild("HumanoidRootPart")
+            if rootPart then
+                humanoid:MoveTo(rootPart.Position)
+            end
+            humanoid.WalkSpeed = 16
+        end
+    end
+    
+    isActive = false
+    canClick = true
+    
+    MainButton.BackgroundColor3 = Color3.new(0, 0.5, 1)
+    if selectedPlayer then
+        MainButton.Text = "🏃 Бежать к " .. selectedPlayer.Name
+        StatusLabel.Text = "Статус: Выбран " .. selectedPlayer.Name
+    else
+        MainButton.Text = "🏃 Бежать к игроку"
+        StatusLabel.Text = "Статус: Готов"
+    end
+end
+
+-- ФУНКЦИЯ ПОЛНОГО ЗАКРЫТИЯ СКРИПТА (удаляет GUI и всё останавливает)
+local function closeScript()
+    stopEverything()
+    
+    -- Очищаем все кнопки игроков
+    for _, button in ipairs(playerButtons) do
+        button:Destroy()
+    end
+    playerButtons = {}
+    
+    -- Удаляем GUI
+    if ScreenGui then
+        ScreenGui:Destroy()
+    end
+    
+    -- Отключаем все события
+    game.Players.PlayerAdded:Disconnect()
+    game.Players.PlayerRemoving:Disconnect()
+    
+    print("✅ Скрипт полностью остановлен и закрыт")
+end
+
+-- ФУНКЦИЯ КЛИКА
 local function performClick()
     if not canClick then
         return
@@ -119,7 +203,6 @@ local function performClick()
     
     canClick = false
     
-    -- Способ 1: VirtualInputManager
     pcall(function()
         local virtualInput = game:GetService("VirtualInputManager")
         virtualInput:SendMouseButtonEvent(0, 0, 0, true, game, 0)
@@ -127,7 +210,6 @@ local function performClick()
         virtualInput:SendMouseButtonEvent(0, 0, 0, false, game, 0)
     end)
     
-    -- Способ 2: Через Mouse (запасной)
     pcall(function()
         local mouse = game.Players.LocalPlayer:GetMouse()
         if mouse and mouse.Button1Down then
@@ -137,7 +219,6 @@ local function performClick()
         end
     end)
     
-    -- Способ 3: Через UserInputService
     pcall(function()
         local userInputService = game:GetService("UserInputService")
         local inputObject = {
@@ -149,7 +230,6 @@ local function performClick()
         userInputService:InputEnded(inputObject, false)
     end)
     
-    -- Разблокируем клик через заданную задержку
     task.wait(clickDelay)
     canClick = true
 end
@@ -181,12 +261,28 @@ local function startCameraFollow(targetPlayer)
             return
         end
         
-        local targetPosition = targetRoot.Position
-        -- Настройка ракурса камеры (можно менять)
-        local cameraOffset = Vector3.new(0, 12, 12)
-        local cameraPosition = targetPosition + cameraOffset
+        local localPlayer = game.Players.LocalPlayer
+        local character = localPlayer.Character
+        if not character then
+            return
+        end
         
-        camera.CFrame = CFrame.lookAt(cameraPosition, targetPosition)
+        local localRoot = character:FindFirstChild("HumanoidRootPart")
+        if not localRoot then
+            return
+        end
+        
+        local distance = (localRoot.Position - targetRoot.Position).Magnitude
+        
+        if distance <= 15 then
+            local targetPosition = targetRoot.Position
+            local cameraOffset = Vector3.new(0, 12, 12)
+            local cameraPosition = targetPosition + cameraOffset
+            
+            camera.CFrame = CFrame.lookAt(cameraPosition, targetPosition)
+        else
+            camera.CameraType = Enum.CameraType.Custom
+        end
     end)
 end
 
@@ -224,7 +320,7 @@ local function startClicking(targetPlayer)
         if rootPart and targetRoot then
             local distance = (rootPart.Position - targetRoot.Position).Magnitude
             
-            if distance <= 8 then
+            if distance <= 10 then
                 performClick()
                 StatusLabel.Text = "Статус: ⚔️ Атака " .. targetPlayer.Name .. " (дист. " .. math.floor(distance) .. ")"
             else
@@ -292,71 +388,20 @@ local function startRunning(targetPlayer)
         
         local distance = (localRoot.Position - targetPos.Position).Magnitude
         
-        if distance <= 8 then
-            -- Достигли цели - включаем автокликер
+        if distance <= 10 then
             if not clickConnection then
                 startClicking(targetPlayer)
             end
             MainButton.BackgroundColor3 = Color3.new(1, 0.3, 0)
             MainButton.Text = "⚔️ Атакую " .. targetPlayer.Name
+            StatusLabel.Text = "Статус: 💥 РЯДОМ с " .. targetPlayer.Name
         else
-            -- Бежим к цели
             humanoid:MoveTo(targetPos.Position)
             MainButton.BackgroundColor3 = Color3.new(0, 1, 0)
             MainButton.Text = "🏃 Бегу к " .. targetPlayer.Name .. "..."
             StatusLabel.Text = "Статус: 🏃 Бегу к " .. targetPlayer.Name .. " (" .. math.floor(distance) .. " ст.)"
         end
     end)
-end
-
--- ОСТАНОВКА ВСЕГО
-local function stopEverything()
-    if runConnection then
-        runConnection:Disconnect()
-        runConnection = nil
-    end
-    
-    if clickConnection then
-        clickConnection:Disconnect()
-        clickConnection = nil
-    end
-    
-    if cameraConnection then
-        cameraConnection:Disconnect()
-        cameraConnection = nil
-    end
-    
-    -- Возвращаем камеру в нормальный режим
-    pcall(function()
-        local camera = workspace.CurrentCamera
-        camera.CameraType = Enum.CameraType.Custom
-    end)
-    
-    -- Останавливаем персонажа
-    local localPlayer = game.Players.LocalPlayer
-    local character = localPlayer.Character
-    if character then
-        local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid then
-            local rootPart = character:FindFirstChild("HumanoidRootPart")
-            if rootPart then
-                humanoid:MoveTo(rootPart.Position)
-            end
-            humanoid.WalkSpeed = 16
-        end
-    end
-    
-    isActive = false
-    canClick = true
-    
-    MainButton.BackgroundColor3 = Color3.new(0, 0.5, 1)
-    if selectedPlayer then
-        MainButton.Text = "🏃 Бежать к " .. selectedPlayer.Name
-        StatusLabel.Text = "Статус: Выбран " .. selectedPlayer.Name
-    else
-        MainButton.Text = "🏃 Бежать к игроку"
-        StatusLabel.Text = "Статус: Готов"
-    end
 end
 
 -- ЗАПУСК ВСЕГО
@@ -368,10 +413,7 @@ local function startAll(targetPlayer)
         return
     end
     
-    -- Запускаем слежку камерой
     startCameraFollow(targetPlayer)
-    
-    -- Запускаем бег
     startRunning(targetPlayer)
     
     isActive = true
@@ -425,7 +467,16 @@ local function updatePlayerList()
     end
 end
 
+-- ============================================
 -- ОБРАБОТЧИКИ КНОПОК
+-- ============================================
+
+-- Кнопка ЗАКРЫТИЯ (крестик) - полностью закрывает скрипт
+CloseButton.MouseButton1Click:Connect(function()
+    closeScript()
+end)
+
+-- Основная кнопка
 MainButton.MouseButton1Click:Connect(function()
     if isActive then
         stopEverything()
@@ -440,6 +491,7 @@ MainButton.MouseButton1Click:Connect(function()
     startAll(selectedPlayer)
 end)
 
+-- Кнопка Стоп
 StopButton.MouseButton1Click:Connect(function()
     stopEverything()
     StatusLabel.Text = "Статус: ⏹️ Остановлено"
@@ -466,13 +518,6 @@ spawn(function()
     while true do
         task.wait(5)
         updatePlayerList()
-    end
-end)
-
--- СБРОС ПРИ ЗАКРЫТИИ GUI
-ScreenGui.AncestryChanged:Connect(function()
-    if not ScreenGui.Parent then
-        stopEverything()
     end
 end)
 
