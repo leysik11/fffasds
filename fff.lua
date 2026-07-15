@@ -411,7 +411,7 @@ local characterCheckConnection = nil
 local flyBodyPosition = nil
 local flyBodyGyro = nil
 
-local clickDelay = 1.2
+local clickDelay = 0.15
 local canClick = true
 
 -- ============================================
